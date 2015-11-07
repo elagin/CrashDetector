@@ -44,7 +44,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         textAccelValues = (TextView) findViewById(R.id.textAccelValues);
         textMaxAccelValues = (TextView) findViewById(R.id.textMaxAccelValues);
         imageView = (ImageView) findViewById(R.id.imageView);
-        Bitmap bitmap = Bitmap.createBitmap(imageView.getWidth(), imageView.getHeight(), Bitmap.Config.ARGB_8888);
+        Bitmap bitmap = Bitmap.createBitmap((int) getWindowManager()
+                .getDefaultDisplay().getWidth(), (int) getWindowManager()
+                .getDefaultDisplay().getHeight(), Bitmap.Config.ARGB_8888);
         canvas = new Canvas(bitmap);
         imageView.setImageBitmap(bitmap);
     }
@@ -105,18 +107,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 textAccelValues.setText("X: " + last_x + " Y: " + last_y + " Z: " + last_z);
                 textMaxAccelValues.setText("X: " + max_x + " Y: " + max_y + " Z: " + max_z);
 
-                int stepX = imageView.getWidth() / 4;
-
-
                 if(xPos == imageView.getWidth())
                     xPos = 0;
                 if(red == 255)
                     red = 0;
                 showLine(xPos, imageView.getHeight(), xPos, imageView.getHeight() - Math.round(last_z * 30), red);
                 showLine(xPos, imageView.getHeight(), xPos, imageView.getHeight() - Math.round(last_x * 30), red);
+                imageView.invalidate();
+
                 xPos++;
                 red++;
-                imageView.invalidate();
             }
         }
     }
