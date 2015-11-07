@@ -16,6 +16,14 @@ import android.os.Bundle;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.YAxis;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
+
+import java.util.ArrayList;
+
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
     private SensorManager mSensorManager;
@@ -31,6 +39,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private TextView textAccelValues;
     private TextView textMaxAccelValues;
+
+    ArrayList<Entry> valsComp1 = new ArrayList<>();
+    ArrayList<Entry> valsComp2 = new ArrayList<>();
+
+    LineChart mLineChart;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +62,19 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 .getDefaultDisplay().getHeight(), Bitmap.Config.ARGB_8888);
         canvas = new Canvas(bitmap);
         imageView.setImageBitmap(bitmap);
+
+        mLineChart = (LineChart) findViewById(R.id.chart);
+
+        Entry c1e1 = new Entry(100.000f, 0); // 0 == quarter 1
+        valsComp1.add(c1e1);
+        Entry c1e2 = new Entry(50.000f, 1); // 1 == quarter 2 ...
+        valsComp1.add(c1e2);
+        // and so on ...
+
+        Entry c2e1 = new Entry(120.000f, 0); // 0 == quarter 1
+        valsComp2.add(c2e1);
+        Entry c2e2 = new Entry(110.000f, 1); // 1 == quarter 2 ...
+        valsComp2.add(c2e2);
     }
 
     protected void showLine( int startx, int starty, int endx, int endy, int red) {
@@ -62,6 +88,22 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     protected void onResume() {
         super.onResume();
         mSensorManager.registerListener(this, mSenAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+
+        LineDataSet setComp1 = new LineDataSet(valsComp1, "Company 1");
+        setComp1.setAxisDependency(YAxis.AxisDependency.LEFT);
+        LineDataSet setComp2 = new LineDataSet(valsComp2, "Company 2");
+        setComp2.setAxisDependency(YAxis.AxisDependency.LEFT);
+
+        ArrayList<LineDataSet> dataSets = new ArrayList<>();
+        dataSets.add(setComp1);
+        dataSets.add(setComp2);
+
+        ArrayList<String> xVals = new ArrayList<String>();
+        xVals.add("1.Q"); xVals.add("2.Q"); xVals.add("3.Q"); xVals.add("4.Q");
+
+        LineData data = new LineData(xVals, dataSets);
+        mLineChart.setData(data);
+        mLineChart.invalidate(); // refresh
     }
 
     @Override
