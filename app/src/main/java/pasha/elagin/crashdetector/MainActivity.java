@@ -41,6 +41,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     ArrayList<Entry> valsComp1 = new ArrayList<>();
     ArrayList<Entry> valsComp2 = new ArrayList<>();
+    ArrayList<Entry> valsComp3 = new ArrayList<>();
 
     LineChart mChart;
 
@@ -68,32 +69,40 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         mChart.setOnChartValueSelectedListener(this);
         mChart.setData(new LineData());
         mChart.invalidate();
+
+        createLines();
+    }
+
+    private void createLines() {
+        LineDataSet setComp1 = new LineDataSet(valsComp1, "X");
+        setComp1.setAxisDependency(YAxis.AxisDependency.LEFT);
+        setComp1.setColor(Color.rgb(2, 250, 2));
+        setComp1.setCircleColor(Color.rgb(2, 250, 2));
+
+        LineDataSet setComp2 = new LineDataSet(valsComp2, "Y");
+        setComp2.setAxisDependency(YAxis.AxisDependency.LEFT);
+        setComp2.setColor(Color.rgb(250, 2, 2));
+        setComp2.setCircleColor(Color.rgb(250, 2, 2));
+
+        LineDataSet setComp3 = new LineDataSet(valsComp3, "Z");
+        setComp3.setAxisDependency(YAxis.AxisDependency.LEFT);
+        setComp3.setColor(Color.rgb(2, 2, 250));
+        setComp3.setCircleColor(Color.rgb(2, 2, 250));
+
+        ArrayList<LineDataSet> dataSets = new ArrayList<>();
+        dataSets.add(setComp1);
+        dataSets.add(setComp2);
+        dataSets.add(setComp3);
+
+        ArrayList<String> xVals = new ArrayList<String>();
+        LineData data = new LineData(xVals, dataSets);
+        mChart.setData(data);
+        mChart.invalidate(); // refresh
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-
-        startAccel();
-        LineDataSet setComp1 = new LineDataSet(valsComp1, "Company 1");
-        setComp1.setAxisDependency(YAxis.AxisDependency.LEFT);
-        LineDataSet setComp2 = new LineDataSet(valsComp2, "Company 2");
-        setComp2.setAxisDependency(YAxis.AxisDependency.LEFT);
-        setComp2.setColor(Color.rgb(250, 2, 2));
-
-        ArrayList<LineDataSet> dataSets = new ArrayList<>();
-        dataSets.add(setComp1);
-        dataSets.add(setComp2);
-
-        ArrayList<String> xVals = new ArrayList<String>();
-        xVals.add("1.Q");
-        xVals.add("2.Q");
-        xVals.add("3.Q");
-        xVals.add("4.Q");
-
-        LineData data = new LineData(xVals, dataSets);
-        mChart.setData(data);
-        mChart.invalidate(); // refresh
     }
 
     @Override
@@ -146,7 +155,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
                 textAccelValues.setText("X: " + last_x + " Y: " + last_y + " Z: " + last_z);
                 textMaxAccelValues.setText("X: " + max_x + " Y: " + max_y + " Z: " + max_z);
-                addEntry(last_z, last_y);
+                addEntry(last_x, last_y, last_z);
             }
         }
     }
@@ -155,19 +164,19 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
     }
 
-    private void addEntry(float valueZ, float valueY) {
+    private void addEntry(float valueX, float valueY, float valueZ) {
         LineData data = mChart.getData();
         if (data != null) {
-            LineDataSet setZ = data.getDataSetByIndex(0);
+            LineDataSet setX = data.getDataSetByIndex(0);
             LineDataSet setY = data.getDataSetByIndex(1);
+            LineDataSet setZ = data.getDataSetByIndex(2);
 
             // add a new x-value first
-            data.addXValue(setZ.getEntryCount() + "");
-            data.addXValue(setY.getEntryCount() + "");
-            // choose a random dataSet
+            data.addXValue(setX.getEntryCount() + "");
 
-            data.addEntry(new Entry(valueZ, setZ.getEntryCount()), 0);
+            data.addEntry(new Entry(valueX, setX.getEntryCount()), 0);
             data.addEntry(new Entry(valueY, setY.getEntryCount()), 1);
+            data.addEntry(new Entry(valueZ, setZ.getEntryCount()), 2);
 
             // let the chart know it's data has changed
             mChart.notifyDataSetChanged();
