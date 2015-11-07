@@ -65,39 +65,33 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         Button buttonStop = (Button) findViewById(R.id.buttonStop);
         buttonStop.setOnClickListener(this);
 
+        Button buttonClear = (Button) findViewById(R.id.buttonClear);
+        buttonClear.setOnClickListener(this);
+
         mChart = (LineChart) findViewById(R.id.chart);
         mChart.setOnChartValueSelectedListener(this);
-        mChart.setData(new LineData());
-        mChart.invalidate();
-
         createLines();
     }
 
+    private LineDataSet createLine(String label, ArrayList<Entry> list, int color) {
+        LineDataSet dataSet = new LineDataSet(list, label);
+        dataSet.setAxisDependency(YAxis.AxisDependency.LEFT);
+        dataSet.setColor(color);
+        dataSet.setCircleColor(color);
+        dataSet.setCircleSize(3f);
+        return dataSet;
+    }
+
     private void createLines() {
-        LineDataSet setComp1 = new LineDataSet(valsComp1, "X");
-        setComp1.setAxisDependency(YAxis.AxisDependency.LEFT);
-        setComp1.setColor(Color.rgb(2, 250, 2));
-        setComp1.setCircleColor(Color.rgb(2, 250, 2));
-
-        LineDataSet setComp2 = new LineDataSet(valsComp2, "Y");
-        setComp2.setAxisDependency(YAxis.AxisDependency.LEFT);
-        setComp2.setColor(Color.rgb(250, 2, 2));
-        setComp2.setCircleColor(Color.rgb(250, 2, 2));
-
-        LineDataSet setComp3 = new LineDataSet(valsComp3, "Z");
-        setComp3.setAxisDependency(YAxis.AxisDependency.LEFT);
-        setComp3.setColor(Color.rgb(2, 2, 250));
-        setComp3.setCircleColor(Color.rgb(2, 2, 250));
-
         ArrayList<LineDataSet> dataSets = new ArrayList<>();
-        dataSets.add(setComp1);
-        dataSets.add(setComp2);
-        dataSets.add(setComp3);
+        dataSets.add(createLine("X", valsComp1, Color.rgb(2, 250, 2)));
+        dataSets.add(createLine("Y", valsComp2, Color.rgb(250, 2, 2)));
+        dataSets.add(createLine("Z", valsComp3, Color.rgb(2, 2, 250)));
 
-        ArrayList<String> xVals = new ArrayList<String>();
+        ArrayList<String> xVals = new ArrayList<>();
         LineData data = new LineData(xVals, dataSets);
         mChart.setData(data);
-        mChart.invalidate(); // refresh
+        mChart.invalidate();
     }
 
     @Override
@@ -263,9 +257,21 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             case R.id.buttonStop:
                 stopAccel();
                 break;
+            case R.id.buttonClear:
+                clearData();
+                break;
             default:
                 Log.e("Startup", "Unknown button pressed");
                 break;
         }
+    }
+
+    private void clearData() {
+        LineData data = mChart.getData();
+        if (data != null) {
+            for (int i = 0; i < data.getDataSetCount(); i++)
+                data.getDataSetByIndex(i).clear();
+        }
+        mChart.invalidate();
     }
 }
