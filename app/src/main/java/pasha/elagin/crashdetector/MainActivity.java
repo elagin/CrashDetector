@@ -1,17 +1,16 @@
 package pasha.elagin.crashdetector;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Paint;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.widget.ImageView;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -26,7 +25,7 @@ import com.github.mikephil.charting.utils.ColorTemplate;
 
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity implements SensorEventListener, OnChartValueSelectedListener {
+public class MainActivity extends AppCompatActivity implements SensorEventListener, OnChartValueSelectedListener, View.OnClickListener {
 
     private SensorManager mSensorManager;
     Sensor mSenAccelerometer;
@@ -34,8 +33,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private float last_x, last_y, last_z;
     private float max_x, max_y, max_z;
     private static final int SHAKE_THRESHOLD = 6000;
-    private ImageView imageView;
-    private Canvas canvas;
     private int xPos;
     private int red;
 
@@ -60,12 +57,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         textAccelValues = (TextView) findViewById(R.id.textAccelValues);
         textMaxAccelValues = (TextView) findViewById(R.id.textMaxAccelValues);
-        imageView = (ImageView) findViewById(R.id.imageView);
-        Bitmap bitmap = Bitmap.createBitmap((int) getWindowManager()
-                .getDefaultDisplay().getWidth(), (int) getWindowManager()
-                .getDefaultDisplay().getHeight(), Bitmap.Config.ARGB_8888);
-        canvas = new Canvas(bitmap);
-        imageView.setImageBitmap(bitmap);
+
+        Button buttonStart = (Button) findViewById(R.id.buttonStart);
+        buttonStart.setOnClickListener(this);
+
+        Button buttonStop = (Button) findViewById(R.id.buttonStop);
+        buttonStop.setOnClickListener(this);
 
         mChart = (LineChart) findViewById(R.id.chart);
         mChart.setOnChartValueSelectedListener(this);
@@ -73,18 +70,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         mChart.invalidate();
     }
 
-    protected void showLine( int startx, int starty, int endx, int endy, int red) {
-        Paint paint = new Paint();
-        paint.setColor(Color.rgb(red, 153, 255));
-        paint.setStrokeWidth(5);
-        canvas.drawLine(startx, starty, endx, endy, paint);
-    }
-
     @Override
     protected void onResume() {
         super.onResume();
-        mSensorManager.registerListener(this, mSenAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
 
+        startAccel();
         LineDataSet setComp1 = new LineDataSet(valsComp1, "Company 1");
         setComp1.setAxisDependency(YAxis.AxisDependency.LEFT);
         LineDataSet setComp2 = new LineDataSet(valsComp2, "Company 2");
@@ -96,7 +86,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         dataSets.add(setComp2);
 
         ArrayList<String> xVals = new ArrayList<String>();
-        xVals.add("1.Q"); xVals.add("2.Q"); xVals.add("3.Q"); xVals.add("4.Q");
+        xVals.add("1.Q");
+        xVals.add("2.Q");
+        xVals.add("3.Q");
+        xVals.add("4.Q");
 
         LineData data = new LineData(xVals, dataSets);
         mChart.setData(data);
@@ -106,6 +99,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     protected void onPause() {
         super.onPause();
+        stopAccel();
+    }
+
+    protected void startAccel() {
+        mSensorManager.registerListener(this, mSenAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+    }
+
+    protected void stopAccel() {
         mSensorManager.unregisterListener(this);
     }
 
@@ -124,7 +125,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 long diffTime = (curTime - lastUpdate);
                 lastUpdate = curTime;
 
-                float speed = Math.abs(x + y + z - last_x - last_y - last_z)/ diffTime * 10000;
+                float speed = Math.abs(x + y + z - last_x - last_y - last_z) / diffTime * 10000;
 
                 if (speed > SHAKE_THRESHOLD) {
 
@@ -134,29 +135,17 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 last_y = y;
                 last_z = z;
 
-                if(max_x< last_x)
+                if (max_x < last_x)
                     max_x = last_x;
 
-                if(max_y< last_y)
+                if (max_y < last_y)
                     max_y = last_y;
 
-                if(max_z< last_z)
+                if (max_z < last_z)
                     max_z = last_z;
 
                 textAccelValues.setText("X: " + last_x + " Y: " + last_y + " Z: " + last_z);
                 textMaxAccelValues.setText("X: " + max_x + " Y: " + max_y + " Z: " + max_z);
-
-                if(xPos == imageView.getWidth())
-                    xPos = 0;
-                if(red == 255)
-                    red = 0;
-                showLine(xPos, imageView.getHeight(), xPos, imageView.getHeight() - Math.round(last_z * 30), red);
-                showLine(xPos, imageView.getHeight(), xPos, imageView.getHeight() - Math.round(last_x * 30), red);
-                imageView.invalidate();
-
-                xPos++;
-                red++;
-
                 addEntry(last_z, last_y);
             }
         }
@@ -168,7 +157,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private void addEntry(float valueZ, float valueY) {
         LineData data = mChart.getData();
-        if(data != null) {
+        if (data != null) {
             LineDataSet setZ = data.getDataSetByIndex(0);
             LineDataSet setY = data.getDataSetByIndex(1);
 
@@ -188,7 +177,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
 //
 //            // this automatically refreshes the chart (calls invalidate())
-            mChart.moveViewTo(data.getXValCount()-7, 50f, YAxis.AxisDependency.LEFT);
+            mChart.moveViewTo(data.getXValCount() - 7, 50f, YAxis.AxisDependency.LEFT);
         }
     }
 
@@ -196,17 +185,17 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         LineData data = mChart.getData();
 
-        if(data != null) {
+        if (data != null) {
 
             int count = (data.getDataSetCount() + 1);
 
             // create 10 y-vals
             ArrayList<Entry> yVals = new ArrayList<Entry>();
 
-            if(data.getXValCount() == 0) {
+            if (data.getXValCount() == 0) {
                 // add 10 x-entries
                 for (int i = 0; i < 10; i++) {
-                    data.addXValue("" + (i+1));
+                    data.addXValue("" + (i + 1));
                 }
             }
 
@@ -252,5 +241,22 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         set.setAxisDependency(YAxis.AxisDependency.LEFT);
         set.setValueTextSize(10f);
         return set;
+    }
+
+    @Override
+    public void onClick(View v) {
+        int id = v.getId();
+
+        switch (id) {
+            case R.id.buttonStart:
+                startAccel();
+                break;
+            case R.id.buttonStop:
+                stopAccel();
+                break;
+            default:
+                Log.e("Startup", "Unknown button pressed");
+                break;
+        }
     }
 }
