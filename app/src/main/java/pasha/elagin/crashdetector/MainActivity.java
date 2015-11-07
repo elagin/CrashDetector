@@ -31,10 +31,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     Sensor mSenAccelerometer;
     private long lastUpdate = 0;
     private float last_x, last_y, last_z;
-    private float max_x, max_y, max_z;
+    private float max_x, max_y, max_z, maxSpeed;
     private static final int SHAKE_THRESHOLD = 6000;
-    private int xPos;
-    private int red;
 
     private TextView textAccelValues;
     private TextView textMaxAccelValues;
@@ -42,6 +40,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     ArrayList<Entry> valsComp1 = new ArrayList<>();
     ArrayList<Entry> valsComp2 = new ArrayList<>();
     ArrayList<Entry> valsComp3 = new ArrayList<>();
+    ArrayList<Entry> valsComp4 = new ArrayList<>();
 
     LineChart mChart;
 
@@ -87,6 +86,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         dataSets.add(createLine("X", valsComp1, Color.rgb(2, 250, 2)));
         dataSets.add(createLine("Y", valsComp2, Color.rgb(250, 2, 2)));
         dataSets.add(createLine("Z", valsComp3, Color.rgb(2, 2, 250)));
+        dataSets.add(createLine("Speed", valsComp4, Color.rgb(250, 2, 250)));
 
         ArrayList<String> xVals = new ArrayList<>();
         LineData data = new LineData(xVals, dataSets);
@@ -102,7 +102,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     protected void onPause() {
         super.onPause();
-        stopAccel();
     }
 
     protected void startAccel() {
@@ -147,9 +146,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 if (max_z < last_z)
                     max_z = last_z;
 
-                textAccelValues.setText("X: " + last_x + " Y: " + last_y + " Z: " + last_z);
-                textMaxAccelValues.setText("X: " + max_x + " Y: " + max_y + " Z: " + max_z);
-                addEntry(last_x, last_y, last_z);
+                if (maxSpeed < speed)
+                    maxSpeed = speed;
+
+                textAccelValues.setText("X: " + last_x + " Y: " + last_y + " Z: " + last_z + " Speed: " + speed);
+                textMaxAccelValues.setText("X: " + max_x + " Y: " + max_y + " Z: " + max_z + " max speed: " + maxSpeed);
+                addEntry(last_x, last_y, last_z, speed);
             }
         }
     }
@@ -158,12 +160,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
     }
 
-    private void addEntry(float valueX, float valueY, float valueZ) {
+    private void addEntry(float valueX, float valueY, float valueZ, float speed) {
         LineData data = mChart.getData();
         if (data != null) {
             LineDataSet setX = data.getDataSetByIndex(0);
             LineDataSet setY = data.getDataSetByIndex(1);
             LineDataSet setZ = data.getDataSetByIndex(2);
+            LineDataSet setSpeed = data.getDataSetByIndex(3);
 
             // add a new x-value first
             data.addXValue(setX.getEntryCount() + "");
@@ -171,6 +174,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             data.addEntry(new Entry(valueX, setX.getEntryCount()), 0);
             data.addEntry(new Entry(valueY, setY.getEntryCount()), 1);
             data.addEntry(new Entry(valueZ, setZ.getEntryCount()), 2);
+            data.addEntry(new Entry(speed, setSpeed.getEntryCount()), 3);
 
             // let the chart know it's data has changed
             mChart.notifyDataSetChanged();
